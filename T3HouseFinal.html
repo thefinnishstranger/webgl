@@ -1,0 +1,89 @@
+<html>
+<style type="text/css">
+  canvas { background: red; }
+</style>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPos;
+
+void main()
+{
+  gl_Position = vPos;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 u_color;
+
+void main() {
+   gl_FragColor = u_color;
+}
+</script>
+
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript" src="initshaders.js"></script>
+<script type="text/javascript" src="house.js"></script>
+
+<script type="text/javascript">
+var canvas;
+var gl;
+
+window.onload = init;
+
+function init() {
+   canvas = document.getElementById("gl-canvas");
+   gl = WebGLUtils.setupWebGL(canvas);
+   if (!gl) {
+      alert("WebGL isn't available");
+   }
+
+   var program = initShaders(gl, "vertex-shader", "fragment-shader");
+
+   var vPos = gl.getAttribLocation(program, "vPos");
+   var colorUniformLocation = gl.getUniformLocation(program, "u_color");
+   var buffer = gl.createBuffer();
+   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+   vertices = housePoints();
+
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+   gl.viewport(0, 0, canvas.width, canvas.height);
+   gl.clearColor(0.25, 0.25, 0.25, 1.0);
+   gl.clear(gl.COLOR_BUFFER_BIT);
+
+   gl.useProgram(program);
+   gl.enableVertexAttribArray(vPos);
+   gl.vertexAttribPointer(vPos, 2, gl.FLOAT, false, 0, 0);
+
+   var colors = [
+        [0.5, 0.5, 0.5, 1],
+        [0.5, 0.35, 0.25, 1],
+        [0.35, 0.35, 0.35, 1],
+        [0.5, 0.35, 0.25, 1],
+        [0.35, 0.25, 0.15, 1],
+        [0.2, 0.2, 0.2, 1],
+        [0.75, 0.75, 0.6, 1],
+        [0.2, 0.2, 0.2, 1],
+        [0.80, 0.75, 0.2, 1]
+   ];
+
+   gl.uniform4f(colorUniformLocation, 0.5, 0.5, 0.5, 1.0);
+   gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+   for (var i=0; i<9; i++)
+   {
+     gl.uniform4f(colorUniformLocation, colors[i][0], colors[i][1], colors[i][2], 1);
+     gl.drawArrays(gl.TRIANGLE_FAN, 3+(i*4), 4);
+   }
+}
+</script>
+
+<body>
+<canvas id="gl-canvas" width="1024" height="512">
+   Oops... your browser doesn't support HTML5's Canvas elements!
+</canvas>
+</body>
+</html>
