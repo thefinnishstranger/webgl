@@ -1,148 +1,208 @@
-<!doctype html>
-<html lang="en">
-  <style type="text/css">
-    canvas { background: lightblue; } /* Sky background */
-  </style>
-  <head>
-    <meta charset="utf-8" />
-    <title>WebGL City Skyline and Graph</title>
-    <script src="webgl-utils.js" type="module"></script>
-    <script src="initShaders.js" type="module"></script>
-  </head>
+<html>
+<style type="text/css">
+  canvas { background: lightblue; } /* Sky color */
+</style>
 
-  <body>
-    <canvas id="gl-canvas" width="512" height="512"></canvas>
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPos;
 
-    <script>
-      // Initialize WebGL context
-      const canvas = document.getElementById('gl-canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+void main()
+{
+  gl_Position = vPos;
+}
+</script>
 
-      if (!gl) {
-        console.error('WebGL not supported, falling back on experimental-webgl');
-      }
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 u_color;
 
-      // Vertex shader program
-      const vertexShaderSrc = `
-        attribute vec2 aPosition;
-        void main() {
-          gl_Position = vec4(aPosition, 0.0, 1.0);
-        }
-      `;
+void main() {
+   gl_FragColor = u_color;
+}
+</script>
 
-      // Fragment shader program
-      const fragmentShaderSrc = `
-        precision mediump float;
-        uniform vec4 uColor;
-        void main() {
-          gl_FragColor = uColor;
-        }
-      `;
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript" src="initshaders.js"></script>
 
-      // Compile shader function
-      function createShader(gl, type, source) {
-        const shader = gl.createShader(type);
-        gl.shaderSource(shader, source);
-        gl.compileShader(shader);
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-          console.error('Error compiling shader:', gl.getShaderInfoLog(shader));
-          gl.deleteShader(shader);
-          return null;
-        }
-        return shader;
-      }
+<script type="text/javascript">
+var canvas;
+var gl;
 
-      // Create program and link shaders
-      function createProgram(gl, vertexShader, fragmentShader) {
-        const program = gl.createProgram();
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
-        gl.linkProgram(program);
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-          console.error('Error linking program:', gl.getProgramInfoLog(program));
-          return null;
-        }
-        return program;
-      }
+window.onload = init;
 
-      // Initialize shaders
-      const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
-      const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
-      const program = createProgram(gl, vertexShader, fragmentShader);
+function init() {
+   canvas = document.getElementById("gl-canvas");
+   gl = WebGLUtils.setupWebGL(canvas);
+   if (!gl) {
+      alert("WebGL isn't available");
+   }
 
-      gl.useProgram(program);
+   var program = initShaders(gl, "vertex-shader", "fragment-shader");
+   gl.useProgram(program);
 
-      // Get attribute and uniform locations
-      const aPosition = gl.getAttribLocation(program, 'aPosition');
-      const uColor = gl.getUniformLocation(program, 'uColor');
+   
+   var skylineVertices = [
+  
+       -0.95, 0.0,   -0.95, -1,  -0.825, -1,  -0.825, 0.0,
+  
+       -0.80, 0.3,   -0.80, -1,  -0.65, -1,  -0.65, 0.3,
+  
+       -0.625, 0.4,  -0.625, -1,  -0.53, -1,  -0.53, 0.4,
+  
+       -0.51, 0.2,   -0.51, -1,  -0.39, -1,  -0.39, 0.2,
+  
+       -0.36, 0.3,   -0.36, -1,  -0.23, -1,  -0.23, 0.3,
+  
+       -0.20, 0.5,   -0.20, -1,   0.0, -1,    0.0, 0.5,
+  
+       0.03, 0.3,    0.03, -1,   0.15, -1,   0.15, 0.3,
+  
+       0.18, 0.1,    0.18, -1,   0.28, -1,   0.28, 0.1,
+  
+       0.31, 0.4,    0.31, -1,   0.47, -1,   0.47, 0.4,
+  
+       0.50, 0.2,    0.50, -1,   0.62, -1,   0.62, 0.2,
+  
+       0.65, 0.3,    0.65, -1,   0.77, -1,   0.77, 0.3,
+  
+       0.80, 0.4,    0.80, -1,   0.95, -1,   0.95, 0.4,
+   ];
 
-      // Define city skyline with varied heights and shapes
-      const cityVertices = new Float32Array([
-        // Building 1 with windows (made of multiple triangles)
-        -0.9, -0.5,  -0.8, -0.5,  -0.8, 0.2,
-        -0.9, -0.5,  -0.8, 0.2,   -0.9, 0.2,
+   
+   var windowVertices = [
+    -0.925, -0.2, -0.925, -0.3, -0.85, -0.3, -0.85, -0.2, 
+    -0.925, -0.4, -0.925, -0.5, -0.85, -0.5, -0.85, -0.4, 
+    -0.925, -0.6, -0.925, -0.7, -0.85, -0.7, -0.85, -0.6, 
+    -0.925, -0.8, -0.925, -0.9, -0.85, -0.9, -0.85, -0.8, 
 
-        // Building 2 taller
-        -0.7, -0.5,  -0.6, -0.5,  -0.6, 0.5,
-        -0.7, -0.5,  -0.6, 0.5,   -0.7, 0.5,
+    -0.77, 0.1, -0.77, 0.0, -0.675, 0.0, -0.675, 0.1, 
+    -0.77, -0.1, -0.77, -0.2, -0.675, -0.2, -0.675, -0.1, 
+    -0.77, -0.3, -0.77, -0.4, -0.675, -0.4, -0.675, -0.3, 
+    -0.77, -0.5, -0.77, -0.6, -0.675, -0.6, -0.675, -0.5, 
+    -0.77, -0.7, -0.77, -0.8, -0.675, -0.8, -0.675, -0.7, 
 
-        // Building 3 wider
-        -0.5, -0.5,  -0.3, -0.5,  -0.3, 0.3,
-        -0.5, -0.5,  -0.3, 0.3,   -0.5, 0.3,
+    -0.605, 0.2, -0.605, 0.1, -0.545, 0.1, -0.545, 0.2, 
+    -0.605, 0.0, -0.605, -0.1, -0.545, -0.1, -0.545, 0.0, 
+    -0.605, -0.2, -0.605, -0.3, -0.545, -0.3, -0.545, -0.2, 
+    -0.605, -0.4, -0.605, -0.5, -0.545, -0.5, -0.545, -0.4, 
+    -0.605, -0.6, -0.605, -0.7, -0.545, -0.7, -0.545, -0.6, 
+    -0.605, -0.8, -0.605, -0.9, -0.545, -0.9, -0.545, -0.8, 
 
-        // Building 4 with windows
-        0.0, -0.5,   0.2, -0.5,   0.2, 0.4,
-        0.0, -0.5,   0.2, 0.4,    0.0, 0.4,
-      ]);
+    -0.48, 0.0, -0.48, -0.1, -0.41, -0.1, -0.41, 0.0,   
+    -0.48, -0.2, -0.48, -0.3, -0.41, -0.3, -0.41, -0.2,   
+    -0.48, -0.4, -0.48, -0.5, -0.41, -0.5, -0.41, -0.4,   
+    -0.48, -0.6, -0.48, -0.7, -0.41, -0.7, -0.41, -0.6,   
+    -0.48, -0.8, -0.48, -0.9, -0.41, -0.9, -0.41, -0.8,   
 
-      // Create buffer for city skyline
-      const cityBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, cityBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, cityVertices, gl.STATIC_DRAW);
+    -0.33, 0.1, -0.33, 0.0, -0.25, 0.0, -0.25, 0.1, 
+    -0.33, -0.1, -0.33, -0.2, -0.25, -0.2, -0.25, -0.1, 
+    -0.33, -0.3, -0.33, -0.4, -0.25, -0.4, -0.25, -0.3, 
+    -0.33, -0.5, -0.33, -0.6, -0.25, -0.6, -0.25, -0.5, 
+    -0.33, -0.7, -0.33, -0.8, -0.25, -0.8, -0.25, -0.7, 
 
-      // Define graph vertices with rise and fall
-      const graphVertices = new Float32Array([
-        -0.9, 0.6,   -0.5, 0.8,  // Rise
-        -0.5, 0.8,   0.0, 0.4,   // Fall
-        0.0, 0.4,    0.5, 0.7,   // Rise
-        0.5, 0.7,    0.9, 0.3    // Fall
-      ]);
+    -0.1, 0.3, -0.1, 0.2, 0.0, 0.2, 0.0, 0.3,       
+    -0.1, 0.1, -0.1, 0.0, 0.0, 0.0, 0.0, 0.1,       
+    -0.1, -0.1, -0.1, -0.2, 0.0, -0.2, 0.0, -0.1,       
+    -0.1, -0.3, -0.1, -0.4, 0.0, -0.4, 0.0, -0.3,       
+    -0.1, -0.5, -0.1, -0.6, 0.0, -0.6, 0.0, -0.5,       
+    -0.1, -0.7, -0.1, -0.8, 0.0, -0.8, 0.0, -0.7,       
 
-      // Create buffer for graph
-      const graphBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, graphBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, graphVertices, gl.STATIC_DRAW);
+    0.05, 0.1, 0.05, 0.0, 0.135, 0.0, 0.135, 0.1,   
+    0.05, -0.1, 0.05, -0.2, 0.135, -0.2, 0.135, -0.1,   
+    0.05, -0.3, 0.05, -0.4, 0.135, -0.4, 0.135, -0.3,   
+    0.05, -0.5, 0.05, -0.6, 0.135, -0.6, 0.135, -0.5,   
+    0.05, -0.7, 0.05, -0.8, 0.135, -0.8, 0.135, -0.7,   
 
-      // Function to draw the city skyline
-      function drawCity() {
-        gl.bindBuffer(gl.ARRAY_BUFFER, cityBuffer);
-        gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(aPosition);
+    0.19, -0.1, 0.19, -0.2, 0.275, -0.2, 0.275, -0.1,     
+    0.19, -0.3, 0.19, -0.4, 0.275, -0.4, 0.275, -0.3,     
+    0.19, -0.5, 0.19, -0.6, 0.275, -0.6, 0.275, -0.5,     
+    0.19, -0.7, 0.19, -0.8, 0.275, -0.8, 0.275, -0.7,     
 
-        gl.uniform4f(uColor, 0.2, 0.2, 0.2, 1.0); // Dark gray for buildings
-        gl.drawArrays(gl.TRIANGLES, 0, cityVertices.length / 2);
-      }
+    0.35, 0.2, 0.35, 0.1, 0.435, 0.1, 0.435, 0.2,    
+    0.35, 0.0, 0.35, -0.1, 0.435, -0.1, 0.435, 0.0,    
+    0.35, -0.2, 0.35, -0.3, 0.435, -0.3, 0.435, -0.2,    
+    0.35, -0.4, 0.35, -0.5, 0.435, -0.5, 0.435, -0.4,    
+    0.35, -0.6, 0.35, -0.7, 0.435, -0.7, 0.435, -0.6,    
+    0.35, -0.8, 0.35, -0.9, 0.435, -0.9, 0.435, -0.8,    
 
-      // Function to draw graph in the sky
-      function drawGraph() {
-        gl.bindBuffer(gl.ARRAY_BUFFER, graphBuffer);
-        gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(aPosition);
+    0.52, 0.0, 0.52, -0.1, 0.6, -0.1, 0.6, 0.0,  
+    0.52, -0.2, 0.52, -0.3, 0.6, -0.3, 0.6, -0.2,  
+    0.52, -0.4, 0.52, -0.5, 0.6, -0.5, 0.6, -0.4,  
+    0.52, -0.6, 0.52, -0.7, 0.6, -0.7, 0.6, -0.6,  
+    0.52, -0.8, 0.52, -0.9, 0.6, -0.9, 0.6, -0.8,  
 
-        gl.uniform4f(uColor, 0.0, 1.0, 0.0, 1.0); // Green for graph line
-        gl.drawArrays(gl.LINES, 0, graphVertices.length / 2);
-      }
+    0.65, 0.1, 0.65, 0.0, 0.7, 0.0, 0.7, 0.1,        
+    0.65, -0.1, 0.65, -0.2, 0.7, -0.2, 0.7, -0.1,        
+    0.65, -0.3, 0.65, -0.4, 0.7, -0.4, 0.7, -0.3,        
+    0.65, -0.5, 0.65, -0.6, 0.7, -0.6, 0.7, -0.5,        
+    0.65, -0.7, 0.65, -0.8, 0.7, -0.8, 0.7, -0.7,        
 
-      // Clear canvas and draw scene
-      function render() {
-        gl.clearColor(0.6, 0.8, 1.0, 1.0); // Light blue sky
-        gl.clear(gl.COLOR_BUFFER_BIT);
+    0.805, 0.2, 0.805, 0.1, 0.945, 0.1, 0.945, 0.2,  
+    0.805, 0.0, 0.805, -0.1, 0.945, -0.1, 0.945, 0.0,  
+    0.805, -0.2, 0.805, -0.3, 0.945, -0.3, 0.945, -0.2,  
+    0.805, -0.4, 0.805, -0.5, 0.945, -0.5, 0.945, -0.4,  
+    0.805, -0.6, 0.805, -0.7, 0.945, -0.7, 0.945, -0.6,  
+    0.805, -0.8, 0.805, -0.9, 0.945, -0.9, 0.945, -0.8,  
+    0.805, -1.0, 0.805, -1.1, 0.945, -1.1, 0.945, -1.0   
+];
 
-        drawCity();
-        drawGraph();
-      }
 
-      render();
-    </script>
-  </body>
+   var chartVertices = [
+       -0.9, 0.5,  -0.7, 0.7,  -0.5, 0.55,  -0.3, 0.8,  -0.1, 0.55,
+       0.1, 0.6,   0.3, 0.42,   0.5, 0.9,   0.7, 0.55,   0.9, 0.95
+   ];
+
+   var skylineBuffer = gl.createBuffer();
+   gl.bindBuffer(gl.ARRAY_BUFFER, skylineBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(skylineVertices), gl.STATIC_DRAW);
+
+   var windowBuffer = gl.createBuffer();
+   gl.bindBuffer(gl.ARRAY_BUFFER, windowBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(windowVertices), gl.STATIC_DRAW);
+
+   var chartBuffer = gl.createBuffer();
+   gl.bindBuffer(gl.ARRAY_BUFFER, chartBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(chartVertices), gl.STATIC_DRAW);
+
+   var vPos = gl.getAttribLocation(program, "vPos");
+   gl.enableVertexAttribArray(vPos);
+   gl.vertexAttribPointer(vPos, 2, gl.FLOAT, false, 0, 0);
+
+   var colorUniformLocation = gl.getUniformLocation(program, "u_color");
+
+   gl.viewport(0, 0, canvas.width, canvas.height);
+   gl.clearColor(0.6, 0.6, 0.6, 1.0);
+   gl.clear(gl.COLOR_BUFFER_BIT);
+
+   gl.bindBuffer(gl.ARRAY_BUFFER, skylineBuffer);
+   gl.vertexAttribPointer(vPos, 2, gl.FLOAT, false, 0, 0);
+   gl.uniform4f(colorUniformLocation, 0.4, 0.4, 0.4, 1.0);
+
+   for (var i = 0; i < skylineVertices.length / 8; i++) {
+     gl.drawArrays(gl.TRIANGLE_FAN, i * 4, 4); 
+   }
+
+   
+   gl.bindBuffer(gl.ARRAY_BUFFER, windowBuffer);
+   gl.vertexAttribPointer(vPos, 2, gl.FLOAT, false, 0, 0);
+   gl.uniform4f(colorUniformLocation, 1.0, 1.0, 0.0, 1.0); 
+
+   for (var i = 0; i < windowVertices.length / 8; i++) {
+     gl.drawArrays(gl.TRIANGLE_FAN, i * 4, 4); 
+   }
+
+   
+   gl.bindBuffer(gl.ARRAY_BUFFER, chartBuffer);
+   gl.vertexAttribPointer(vPos, 2, gl.FLOAT, false, 0, 0);
+   gl.uniform4f(colorUniformLocation, 0.0, 0.0, 1.0, 1.0); 
+
+   gl.drawArrays(gl.LINE_STRIP, 0, 10); 
+}
+</script>
+
+<body>
+<canvas id="gl-canvas" width="1024" height="512">
+   Oops... your browser doesn't support HTML5's Canvas elements!
+</canvas>
+</body>
 </html>
