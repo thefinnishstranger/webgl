@@ -1,6 +1,13 @@
+<!-- 
+Nikolas Gustavson
+COSC 4345
+September 23, 2024
+Assignment 1
+-->
+
 <html>
 <style type="text/css">
-  canvas { background: lightblue; } /* Sky color */
+  canvas { background: lightblue; } 
 </style>
 
 <script id="vertex-shader" type="x-shader/x-vertex">
@@ -42,29 +49,17 @@ function init() {
 
    
    var skylineVertices = [
-  
        -0.95, 0.0,   -0.95, -1,  -0.825, -1,  -0.825, 0.0,
-  
        -0.80, 0.3,   -0.80, -1,  -0.65, -1,  -0.65, 0.3,
-  
        -0.625, 0.4,  -0.625, -1,  -0.53, -1,  -0.53, 0.4,
-  
        -0.51, 0.2,   -0.51, -1,  -0.39, -1,  -0.39, 0.2,
-  
        -0.36, 0.3,   -0.36, -1,  -0.23, -1,  -0.23, 0.3,
-  
        -0.20, 0.5,   -0.20, -1,   0.0, -1,    0.0, 0.5,
-  
        0.03, 0.3,    0.03, -1,   0.15, -1,   0.15, 0.3,
-  
        0.18, 0.1,    0.18, -1,   0.28, -1,   0.28, 0.1,
-  
        0.31, 0.4,    0.31, -1,   0.47, -1,   0.47, 0.4,
-  
        0.50, 0.2,    0.50, -1,   0.62, -1,   0.62, 0.2,
-  
        0.65, 0.3,    0.65, -1,   0.77, -1,   0.77, 0.3,
-  
        0.80, 0.4,    0.80, -1,   0.95, -1,   0.95, 0.4,
    ];
 
@@ -171,30 +166,28 @@ function init() {
    var colorUniformLocation = gl.getUniformLocation(program, "u_color");
 
    gl.viewport(0, 0, canvas.width, canvas.height);
-   gl.clearColor(0.6, 0.6, 0.6, 1.0);
+   gl.clearColor(0.0, 0.0, 1.0, 0.2);
    gl.clear(gl.COLOR_BUFFER_BIT);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, skylineBuffer);
    gl.vertexAttribPointer(vPos, 2, gl.FLOAT, false, 0, 0);
-   gl.uniform4f(colorUniformLocation, 0.4, 0.4, 0.4, 1.0);
+   gl.uniform4f(colorUniformLocation, 0.4, 0.4, 0.4, 0.9);
 
    for (var i = 0; i < skylineVertices.length / 8; i++) {
      gl.drawArrays(gl.TRIANGLE_FAN, i * 4, 4); 
    }
-
    
    gl.bindBuffer(gl.ARRAY_BUFFER, windowBuffer);
    gl.vertexAttribPointer(vPos, 2, gl.FLOAT, false, 0, 0);
-   gl.uniform4f(colorUniformLocation, 1.0, 1.0, 0.0, 1.0); 
+   gl.uniform4f(colorUniformLocation, 1.0, 1.0, 0.0, 0.7); 
 
    for (var i = 0; i < windowVertices.length / 8; i++) {
      gl.drawArrays(gl.TRIANGLE_FAN, i * 4, 4); 
    }
 
-   
    gl.bindBuffer(gl.ARRAY_BUFFER, chartBuffer);
    gl.vertexAttribPointer(vPos, 2, gl.FLOAT, false, 0, 0);
-   gl.uniform4f(colorUniformLocation, 0.0, 0.0, 1.0, 1.0); 
+   gl.uniform4f(colorUniformLocation, 0.0, 0.0, 0.0, 1.0); 
 
    gl.drawArrays(gl.LINE_STRIP, 0, 10); 
 }
